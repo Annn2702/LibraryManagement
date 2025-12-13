@@ -64,6 +64,35 @@ def check_dependencies():
     return True
 
 
+def show_login():
+    """Hiển thị form đăng nhập và trả về kết quả"""
+    from views.staff_login_view import StaffLoginView
+    from config.session import Session
+
+    # Tạo root window KHÔNG ẨN
+    root = tk.Tk()
+    root.geometry("1x1+0+0")  # Làm root siêu nhỏ ở góc màn hình
+    root.overrideredirect(True)  # Bỏ thanh tiêu đề
+
+    logger.info("Showing login dialog...")
+
+    # Tạo login dialog
+    login_dialog = StaffLoginView(root)
+
+    # Chờ login dialog đóng
+    root.wait_window(login_dialog)
+
+    # Kiểm tra đăng nhập
+    is_authenticated = Session.is_authenticated()
+
+    if is_authenticated:
+        logger.info(f"✅ Login successful: {Session.get_username()} (role_id: {Session.get_role_id()})")
+    else:
+        logger.warning("❌ Login cancelled or failed")
+
+    root.destroy()
+    return is_authenticated
+
 def main():
     """Entry point của ứng dụng"""
     try:
@@ -75,6 +104,19 @@ def main():
         if not check_dependencies():
             logger.error("Dependencies check failed")
             sys.exit(1)
+        logger.info("Launching login screen...")
+        if not show_login():
+            # User đóng login hoặc đăng nhập thất bại
+            messagebox.showinfo(
+                "Đăng nhập bị hủy",
+                "Bạn phải đăng nhập để sử dụng hệ thống."
+            )
+            logger.info("Login cancelled by user")
+            sys.exit(0)
+
+        # 4️⃣ Login thành công → Load MainWindow
+        logger.info("Login successful, loading main window...")
+        from views.main_window import MainWindow
 
         # Import views (after dependency check)
         from views.main_window import MainWindow

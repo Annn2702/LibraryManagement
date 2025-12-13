@@ -48,8 +48,10 @@ class MainWindow(tk.Tk):
             )
             self.destroy()
             sys.exit(1)
-        #Đăng nhập khi khởi tạo
-        self._check_login_on_startup()
+        # #Đăng nhập khi khởi tạo
+        # self._check_login_on_startup()
+
+
         # Configure style
         self._configure_style()
 
