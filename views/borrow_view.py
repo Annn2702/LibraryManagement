@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 from controllers.borrow_controller import BorrowController
+from datetime import datetime
 
 
 class BorrowView(ttk.Frame):
