@@ -146,5 +146,44 @@ class Database:
             logger.info("✅ Đã đóng connection pool")
 
 
+    # =========================
+    # WRAPPER METHODS (MVC SAFE)
+    # =========================
+
+    def fetchone(self, query: str, params: tuple = None) -> Optional[dict]:
+        """Lấy 1 dòng (SELECT ONE)"""
+        results = self.execute_query(
+            query=query,
+            params=params,
+            fetch=True
+        )
+        return results[0] if results else None
+
+    def fetchall(self, query: str, params: tuple = None) -> list[dict]:
+        """Lấy nhiều dòng (SELECT ALL)"""
+        return self.execute_query(
+            query=query,
+            params=params,
+            fetch=True
+        ) or []
+
+    def execute(self, query: str, params: tuple = None) -> bool:
+        """INSERT / UPDATE / DELETE"""
+        result = self.execute_query(
+            query=query,
+            params=params,
+            commit=True
+        )
+        return result is not None
+
+    def execute_insert(self, query: str, params: tuple = None) -> Optional[int]:
+        """INSERT và trả về lastrowid"""
+        return self.execute_query(
+            query=query,
+            params=params,
+            commit=True
+        )
+
+
 # Singleton instance
 db = Database()
