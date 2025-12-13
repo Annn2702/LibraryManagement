@@ -406,21 +406,22 @@ class ReaderDialog(tk.Toplevel):
             pass
 
     def _add_one_year_to_card_end(self):
-        """Cộng 1 năm vào ngày hết hạn dựa trên ngày cấp thẻ"""
+        """Cộng thêm 1 năm vào ngày hết hạn hiện tại"""
         try:
-            card_start = self.card_start_var.get().strip()
+            end_str = self.card_end_var.get().strip()
 
-            if not card_start:
-                base_date = datetime.now()
+            if end_str:
+                base_date = datetime.strptime(end_str, "%Y-%m-%d")
             else:
-                base_date = datetime.strptime(card_start, "%Y-%m-%d")
+                base_date = datetime.now()
 
             new_end = base_date + timedelta(days=365)
             self.card_end_var.set(new_end.strftime("%Y-%m-%d"))
 
         except ValueError:
-            new_end = datetime.now() + timedelta(days=365)
-            self.card_end_var.set(new_end.strftime("%Y-%m-%d"))
+            self.card_end_var.set(
+                (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")
+            )
 
     def _fill_data(self):
         """Điền dữ liệu khi sửa"""

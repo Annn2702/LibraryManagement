@@ -879,8 +879,9 @@ class ReaderView(ttk.Frame):
 
         dialog = tk.Toplevel(self)
         dialog.title("📊 Thống kê bạn đọc")
-        dialog.geometry("700x650")
-        dialog.resizable(False, False)
+        dialog.geometry("900x650")
+        dialog.minsize(900, 800)
+        dialog.resizable(True, True)
         dialog.transient(self)
         dialog.grab_set()
 
@@ -941,57 +942,95 @@ class ReaderView(ttk.Frame):
         ttk.Label(rep_frame, text=rep_text, font=('Arial', 10), justify='left').pack(anchor='w')
 
         # Chart section
-        chart_frame = ttk.LabelFrame(main_frame, text="📊 Biểu đồ trực quan", padding=15)
+        chart_frame = ttk.LabelFrame(main_frame, text="📊 Trạng thái bạn đọc", padding=15)
         chart_frame.pack(fill='both', expand=True, pady=10)
 
-        canvas = tk.Canvas(chart_frame, height=150, bg='white')
-        canvas.pack(fill='x', pady=10)
+        canvas = tk.Canvas(chart_frame, height=360, bg='white')
+        canvas.pack(fill='both', expand=True)
 
-        # Draw bar chart
-        total = stats['total'] or 1
+        # ===== DATA =====
+        total = max(stats['total'], 1)
         data = [
             ('Hoạt động', stats['active'], '#4CAF50'),
             ('Hết hạn', stats['expired'], '#F44336'),
             ('Bị khóa', stats['locked'], '#FF9800')
         ]
 
-        x_start = 50
-        bar_width = 180
-        spacing = 30
+        # ===== CHART CONFIG =====
+        chart_height = 160
+        chart_width = 500
+        origin_x = 70
+        origin_y = 200
+        bar_width = 90
+        spacing = 60
+        max_value = max(v for _, v, _ in data)
 
+        # ===== GRID + Y AXIS =====
+        steps = 5
+        for i in range(steps + 1):
+            y = origin_y - (i / steps) * chart_height
+            value = int(max_value * i / steps)
+
+            # Grid line
+            canvas.create_line(origin_x, y, origin_x + chart_width, y, fill='#E0E0E0')
+
+            # Y labels
+            canvas.create_text(origin_x - 10, y, text=str(value), anchor='e', font=('Arial', 9))
+
+        # Y axis
+        canvas.create_line(origin_x, origin_y, origin_x, origin_y - chart_height, width=2)
+
+        # X axis
+        canvas.create_line(origin_x, origin_y, origin_x + chart_width, origin_y, width=2)
+
+        # ===== DRAW BARS =====
         for i, (label, count, color) in enumerate(data):
-            x = x_start + i * (bar_width + spacing)
-            height = (count / max(total, 1)) * 80
+            x = origin_x + spacing + i * (bar_width + spacing)
+            bar_height = (count / max_value) * chart_height if max_value else 0
 
             # Bar
             canvas.create_rectangle(
-                x, 100 - height, x + bar_width, 100,
-                fill=color, outline=color
+                x,
+                origin_y - bar_height,
+                x + bar_width,
+                origin_y,
+                fill=color,
+                outline=''
             )
 
-            # Count
+            # Value on top
             canvas.create_text(
-                x + bar_width / 2, 95 - height - 10,
+                x + bar_width / 2,
+                origin_y - bar_height - 10,
                 text=str(count),
-                font=('Arial', 12, 'bold'),
+                font=('Arial', 11, 'bold'),
                 fill=color
             )
 
-            # Label
+            # Percentage
+            percent = count / total * 100
             canvas.create_text(
-                x + bar_width / 2, 120,
+                x + bar_width / 2,
+                origin_y - bar_height - 28,
+                text=f"{percent:.1f}%",
+                font=('Arial', 9),
+                fill='#555'
+            )
+
+            # X label
+            canvas.create_text(
+                x + bar_width / 2,
+                origin_y + 15,
                 text=label,
                 font=('Arial', 10)
             )
 
-            # Percentage
-            percentage = (count / total * 100) if total > 0 else 0
-            canvas.create_text(
-                x + bar_width / 2, 135,
-                text=f"({percentage:.1f}%)",
-                font=('Arial', 9),
-                fill='#666'
-            )
+        # ===== LEGEND =====
+        legend_y = 20
+        for i, (label, _, color) in enumerate(data):
+            lx = origin_x + i * 160
+            canvas.create_rectangle(lx, legend_y, lx + 18, legend_y + 18, fill=color, outline='')
+            canvas.create_text(lx + 25, legend_y + 9, text=label, anchor='w', font=('Arial', 10))
 
         # Action buttons
         btn_frame = ttk.Frame(main_frame)
